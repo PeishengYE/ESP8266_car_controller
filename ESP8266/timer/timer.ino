@@ -18,7 +18,7 @@ const char *password = "yep123";
 Ticker blinker;
  
 #define LED 4  //On board LED
- ESP8266WebServer server(80);
+ESP8266WebServer server(80);
 
 /* Just a little test message.  Go to http://192.168.4.1 in a web browser
  * connected to this access point to see it.

@@ -14,37 +14,58 @@
 */
 
 #include <Ticker.h>
+#define STATUS_LED_PIN 4
+#define ADC_LIMIT  550
 
-Ticker flipper;
+Ticker status_led_ticker;
+Ticker light_strength_ticker;
+//ESP8266WebServer server(80);
 
-#define LED_PIN 4
 
-int count = 0;
+int status_led_working = 0;
 
-void flip()
-{
-  int state = digitalRead(LED_PIN);  // get the current state of GPIO1 pin
-  digitalWrite(LED_PIN, !state);     // set pin to the opposite state
+void flip() {
+  int state = digitalRead(STATUS_LED_PIN);  // get the current state of GPIO1 pin
+  digitalWrite(STATUS_LED_PIN, !state);     // set pin to the opposite state
   
-  ++count;
-  // when the counter reaches a certain value, start blinking like crazy
-  if (count == 20)
-  {
-    flipper.attach(0.1, flip);
+  if (status_led_working == 1){
+  // make flash crazy
+    status_led_ticker.attach(0.1, flip);
+
+
+  } else {
+  // make flash at normal speed
+    status_led_ticker.attach(0.3, flip);
+
   }
-  // when the counter reaches yet another value, stop blinking
-  else if (count == 120)
-  {
-    flipper.detach();
-  }
+
+}
+
+void checking_ADC() {
+ int adc_value = analogRead(A0);
+ Serial.println("ADC VALUE: "+String(adc_value));
+
+ if (adc_value >= ADC_LIMIT){
+     status_led_working = 0;
+
+ }else{
+
+     status_led_working = 1;
+ }
 }
 
 void setup() {
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
+	Serial.begin(115200);
+    Serial.println("");
+
+  pinMode(STATUS_LED_PIN, OUTPUT);
+  pinMode(A0, INPUT);
+
+  digitalWrite(STATUS_LED_PIN, LOW);
   
   // flip the pin every 0.3s
-  flipper.attach(0.3, flip);
+  status_led_ticker.attach(0.3, flip);
+  light_strength_ticker.attach(0.4, checking_ADC);
 }
 
 void loop() {
