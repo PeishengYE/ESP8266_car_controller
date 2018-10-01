@@ -22,7 +22,7 @@
 #define ADC_LIMIT  550
 #define WIFI_RUNNING_TIME (60*2)  
 #define LIGHT_STRENGTH_CONTINOUS_TIME_LIMIT (20)
-
+#define SYSTEM_DEEP_SLEEPTIME (10000000) /* 10 seconds */
 
 ESP8266WebServer server(80);
 Ticker status_led_ticker;
@@ -58,7 +58,8 @@ void stopWifiSocket(){
 	 server.stop();
 	 Serial.println("HTTP server stopped>> Rebooting the system");
 	 /* this is to reboot system */
-	 ESP.deepSleep(5000000, WAKE_RF_DEFAULT);
+	 //ESP.deepSleep(5000000, WAKE_RF_DEFAULT);
+	 ESP.deepSleep(SYSTEM_DEEP_SLEEPTIME, WAKE_RF_DEFAULT);
 }
 
 void startWifiSocketTimer(){
@@ -96,7 +97,8 @@ void checking_ADC() {
    if(isWifiSocketStarted ==0 ){
 	 Serial.println("No enough light, go sleep and reboot");
 	 /* this is to reboot system */
-	 ESP.deepSleep(5000000, WAKE_RF_DEFAULT);
+	 //ESP.deepSleep(5000000, WAKE_RF_DEFAULT);
+	 ESP.deepSleep(SYSTEM_DEEP_SLEEPTIME, WAKE_RF_DEFAULT);
    }
  }
 }
