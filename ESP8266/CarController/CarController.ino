@@ -18,6 +18,7 @@
 #include <WiFiClient.h> 
 #include <ESP8266WebServer.h>
 
+#define UNLOCK_DOOR_PIN 5
 #define STATUS_LED_PIN 4
 #define ADC_LIMIT  550
 #define WIFI_RUNNING_TIME (60*2)  
@@ -26,6 +27,7 @@
 
 ESP8266WebServer server(80);
 Ticker status_led_ticker;
+Ticker unlock_door_ticker;
 Ticker light_strength_ticker;
 Ticker wifi_enable_ticker;
 //ESP8266WebServer server(80);
@@ -46,7 +48,7 @@ void startWifiSocket(){
 	IPAddress myIP = WiFi.softAPIP(); 
 	Serial.print("AP IP address: ");
 	Serial.println(myIP);
-	server.on("/", handleRoot);
+	server.on("/345678", handleRoot);
 	 server.begin();
 
      Serial.println("startWifiSocket()<< ");
@@ -67,17 +69,29 @@ void startWifiSocketTimer(){
     wifi_enable_ticker.attach(WIFI_RUNNING_TIME, stopWifiSocket);
 }
 
+void unlock_door_pin_to_zero() {
+     digitalWrite(UNLOCK_DOOR_PIN, 0);     // set pin to OFF
+}
+void unlock_door() {
+     digitalWrite(UNLOCK_DOOR_PIN, 1);     // set pin to ON
+     unlock_door_ticker.once(1, unlock_door_pin_to_zero);
+}
 
 void handleRoot() {
         int adc_value = analogRead(A0);
 	server.send(200, "text/html", "<h1>You are connected to YEP WIFI: with ADC: " + String(adc_value) + "</h1>");
+        Serial.println("handleRoot()<<  Done for Http response ! ");   
+        unlock_door();
 }
+
 
 void status_led_flip() {
   int state = digitalRead(STATUS_LED_PIN);  // get the current state of GPIO1 pin
   digitalWrite(STATUS_LED_PIN, !state);     // set pin to the opposite state
   status_led_ticker.attach(0.3, status_led_flip);
 }
+
+
 
 void checking_ADC() {
  int adc_value = analogRead(A0);
@@ -109,9 +123,11 @@ void setup() {
     isWifiSocketStarted = 0;
 
   pinMode(STATUS_LED_PIN, OUTPUT);
+  pinMode(UNLOCK_DOOR_PIN, OUTPUT);
   pinMode(A0, INPUT);
 
   digitalWrite(STATUS_LED_PIN, LOW);
+  digitalWrite(UNLOCK_DOOR_PIN, LOW);
   
   // status_led_flip the pin every 0.3s
   status_led_ticker.attach(0.3, status_led_flip);
